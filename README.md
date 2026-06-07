@@ -1,12 +1,11 @@
 # kaggle-lab
 
-A small, reproducible **experiment-tracking framework** for Kaggle competitions.
-Every submission is a notebook run with a mandatory changelog (a stated *change*
-and *hypothesis*, written before the score is known), executed via papermill,
-auto-submitted to Kaggle, polled for its score, and recorded as an **append-only**
-parent→child run in `runs.jsonl`. Records are never mutated: the format supports
-corrections as new rows carrying `supersedes`, and the current state is recovered
-by collapsing the log to the latest record per run.
+I built this so my Kaggle work would be reproducible. Every submission is a notebook
+run with a mandatory changelog — a *change* and a *hypothesis*, written before I see
+the score. The framework runs the notebook with papermill, submits the output to
+Kaggle, polls for the score, and appends a parent→child record to `runs.jsonl`. I
+never edit a record: corrections go in as new rows carrying `supersedes`, and the
+current state is the log collapsed to the latest record per run.
 
 Installed as a CLI:
 
@@ -17,23 +16,25 @@ uv run kaggle-lab --help
 
 ## Why this exists
 
-The point isn't a leaderboard score — it's the **discipline**: hypothesis-first
-changelogs (no post-hoc rationalization), git SHA captured per run, submission
-de-duplication via SHA1, recoverable polling, and an honest log that keeps the
-regressions, not just the wins.
+I don't care about the leaderboard score here; I care about the discipline around
+it. The changelog is written before the score is known, so a run is a claim that can
+be wrong instead of a story I tell afterwards. Each run pins its code by git SHA,
+dedupes submissions by SHA1 so I can't quietly re-submit the same CSV, recovers from
+a polling timeout, and keeps the regressions in the log rather than only the wins.
 
 ## Worked example — home-data (Ames House Prices)
 
-`examples/home-data-for-ml-course/` is a real, 37-run campaign on the Ames
-regression competition (metric: RMSE on log-price, lower is better), tracked
-end-to-end with this framework. `runs.jsonl` keeps all 37 records and
-`experiments/` ships every run's notebook — winners *and* the 15 falsified
-regressions — so the whole journey is reproducible, not just the clean climb.
+I drove the framework through a real competition. `examples/home-data-for-ml-course/`
+is a 37-run campaign on the Ames regression problem (metric: RMSE on log-price, lower
+is better). `runs.jsonl` keeps all 37 records and `experiments/` ships every run's
+notebook — the winners and the 15 regressions — so the whole journey is reproducible,
+not just the clean climb.
 
-The table below lists only the **new-best milestones**. The real path was not
-monotonic: dead-ends like the top-20 mutual-information baseline (+2369 LB),
-the `TotalSF>4000` outlier rule (+431), and a cluster of late feature-engineering
-ideas (+48 to +123) are all kept in the log. See the full non-linear graph with
+The table below lists only the **new-best milestones**. The real path wasn't
+monotonic, and some of my better-sounding ideas made the score worse: keeping only
+the top-20 mutual-information features cost +2369 LB, tightening the outlier rule to
+`TotalSF>4000` cost +431, and a cluster of late feature-engineering ideas cost +48
+to +123. They are all still in the log. I read the full graph with
 `kaggle-lab tree examples/home-data-for-ml-course`.
 
 | # | Change | Public RMSE | Best so far |
