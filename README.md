@@ -26,9 +26,15 @@ regressions, not just the wins.
 
 `examples/home-data-for-ml-course/` is a real, 37-run campaign on the Ames
 regression competition (metric: RMSE on log-price, lower is better), tracked
-end-to-end with this framework. The `runs.jsonl` keeps all 37 records (including
-the falsified regressions); `experiments/` keeps the notebooks for the
-score-improving milestones.
+end-to-end with this framework. `runs.jsonl` keeps all 37 records and
+`experiments/` ships every run's notebook — winners *and* the 14 falsified
+regressions — so the whole journey is reproducible, not just the clean climb.
+
+The table below lists only the **new-best milestones**. The real path was not
+monotonic: dead-ends like the top-20 mutual-information baseline (+2369 LB),
+the `TotalSF>4000` outlier rule (+431), and a cluster of late feature-engineering
+ideas (+48 to +123) are all kept in the log. See the full non-linear graph with
+`kaggle-lab tree examples/home-data-for-ml-course`.
 
 | # | Change | Public RMSE | Best so far |
 |---|---|---|---|
@@ -88,7 +94,7 @@ kaggle-lab/
     └── home-data-for-ml-course/
         ├── config.yaml     competition metadata (metric: rmse, direction: minimize)
         ├── runs.jsonl      all 37 tracked runs
-        ├── experiments/    the 18 milestone notebooks
+        ├── experiments/    every run's notebook (winners + regressions)
         └── utils/          Ames-specific transformers
 ```
 
