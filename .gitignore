@@ -12,5 +12,8 @@ __pycache__/
 examples/*/data/
 examples/*/artifacts/
 
+# IDE
+.idea/
+
 # OS
 .DS_Store
