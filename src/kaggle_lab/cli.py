@@ -197,13 +197,18 @@ def _derived_notebook(parent_run_id: str, parent_nb: dict) -> dict:
 
 @click.group()
 def main() -> None:
-    pass
+    """kaggle-lab: reproducible experiment tracking for Kaggle competitions.
+
+    Scaffold competitions and notebooks, run and submit experiments, and inspect
+    the append-only run log (list / show / tree).
+    """
 
 
 @main.command("list")
 @click.argument("competition_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
 @click.option("--top", type=int, default=None, help="Show only the top N by public_score.")
 def list_cmd(competition_dir: Path, top: int | None) -> None:
+    """List scored runs, best public score first."""
     lab = Lab.from_config(competition_dir / "config.yaml")
     runs = latest_runs(read_runs(lab.runs_jsonl))
     scored = [r for r in runs if r.kaggle and r.kaggle.public_score is not None]
@@ -224,6 +229,7 @@ def list_cmd(competition_dir: Path, top: int | None) -> None:
 @click.argument("competition_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
 @click.argument("run_id")
 def show_cmd(competition_dir: Path, run_id: str) -> None:
+    """Print the full JSON record of a single run."""
     lab = Lab.from_config(competition_dir / "config.yaml")
     record = get_run(lab.runs_jsonl, run_id)
     if record is None:
@@ -235,6 +241,7 @@ def show_cmd(competition_dir: Path, run_id: str) -> None:
 @main.command("tree")
 @click.argument("competition_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
 def tree_cmd(competition_dir: Path) -> None:
+    """Render the parent->child run tree with score deltas."""
     lab = Lab.from_config(competition_dir / "config.yaml")
     runs = latest_runs(read_runs(lab.runs_jsonl))
     if not runs:
@@ -286,6 +293,7 @@ def tree_cmd(competition_dir: Path) -> None:
 @click.argument("competition_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
 @click.option("--from", "from_run", default="root", help="Parent run id.")
 def new_cmd(competition_dir: Path, from_run: str) -> None:
+    """Scaffold a new experiment notebook, optionally derived from a parent run."""
     lab = Lab.from_config(competition_dir / "config.yaml")
     lab.experiments_dir.mkdir(parents=True, exist_ok=True)
     run_id = new_run_id()
@@ -327,6 +335,7 @@ def _download_competition_data(api, slug: str, data_dir: Path) -> None:
 @click.argument("slug")
 @click.option("--download", is_flag=True, help="Fetch the competition data into data/ after scaffolding.")
 def init_cmd(slug: str, download: bool) -> None:
+    """Scaffold a new competition directory (config + folder layout)."""
     root = Path("competitions") / slug
     cfg = root / "config.yaml"
     if cfg.exists():
@@ -344,6 +353,7 @@ def init_cmd(slug: str, download: bool) -> None:
 @main.command("pull-data")
 @click.argument("competition_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
 def pull_data_cmd(competition_dir: Path) -> None:
+    """Download the competition data into its data/ directory."""
     lab = Lab.from_config(competition_dir / "config.yaml")
     _download_competition_data(_make_api(), lab.config.slug, lab.data_dir)
     click.echo(f"data downloaded to {lab.data_dir}")
@@ -351,10 +361,14 @@ def pull_data_cmd(competition_dir: Path) -> None:
 
 @main.command("run")
 @click.argument("notebook", type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.option("--dry-run", is_flag=True)
-@click.option("--no-submit", is_flag=True)
-@click.option("--allow-dirty", is_flag=True)
-@click.option("--force-duplicate", is_flag=True)
+@click.option("--dry-run", is_flag=True,
+              help="Resolve the parent and report the run without executing the notebook.")
+@click.option("--no-submit", is_flag=True,
+              help="Execute and record the run but skip the Kaggle submission.")
+@click.option("--allow-dirty", is_flag=True,
+              help="Run even when the git tree has uncommitted changes.")
+@click.option("--force-duplicate", is_flag=True,
+              help="Submit even if an identical submission (same SHA1) already exists.")
 def run_cmd(
     notebook: Path,
     dry_run: bool,
@@ -362,6 +376,7 @@ def run_cmd(
     allow_dirty: bool,
     force_duplicate: bool,
 ) -> None:
+    """Execute a notebook, submit it to Kaggle, and record the run."""
     competition_dir = notebook.resolve().parent.parent
     lab = Lab.from_config(competition_dir / "config.yaml")
     record = lab.run(
@@ -383,6 +398,7 @@ def run_cmd(
 @main.command("refresh")
 @click.argument("competition_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
 def refresh_cmd(competition_dir: Path) -> None:
+    """Poll Kaggle for pending runs and update their scores."""
     lab = Lab.from_config(competition_dir / "config.yaml")
     api = _make_api()
     updated = lab.refresh(api=api)
@@ -398,6 +414,7 @@ def refresh_cmd(competition_dir: Path) -> None:
 @main.command("quota")
 @click.argument("competition_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
 def quota_cmd(competition_dir: Path) -> None:
+    """Show today's submission count against the daily limit."""
     lab = Lab.from_config(competition_dir / "config.yaml")
     api = _make_api()
     subs = api.competition_submissions(competition=lab.config.slug) or []

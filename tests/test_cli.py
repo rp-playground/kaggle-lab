@@ -465,3 +465,30 @@ def test_quota_reports_remaining(tmp_path, monkeypatch):
     # daily_limit=10 in fixture, 2 used today -> 8 remaining
     assert "used today: 2" in result.output.lower() or "2/10" in result.output
     assert "8" in result.output
+
+
+def test_help_strings_present():
+    """Group, every subcommand, and run's options expose help text."""
+    runner = CliRunner()
+
+    top = runner.invoke(main, ["--help"])
+    assert top.exit_code == 0
+    assert "experiment tracking" in top.output.lower()
+    for cmd in ("list", "show", "tree", "new", "init", "pull-data",
+                "run", "refresh", "quota"):
+        assert cmd in top.output
+
+    # each subcommand has a one-line summary in its own --help
+    for cmd, keyword in [
+        ("list", "best"), ("show", "json"), ("tree", "tree"),
+        ("new", "scaffold"), ("init", "competition"), ("pull-data", "download"),
+        ("run", "submit"), ("refresh", "poll"), ("quota", "daily"),
+    ]:
+        out = runner.invoke(main, [cmd, "--help"]).output.lower()
+        assert keyword in out, f"{cmd} help missing {keyword!r}"
+
+    run_help = runner.invoke(main, ["run", "--help"]).output.lower()
+    assert "without executing" in run_help      # --dry-run
+    assert "skip the kaggle" in run_help         # --no-submit
+    assert "uncommitted" in run_help             # --allow-dirty
+    assert "duplicate" in run_help               # --force-duplicate
