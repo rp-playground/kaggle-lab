@@ -27,7 +27,7 @@ regressions, not just the wins.
 `examples/home-data-for-ml-course/` is a real, 37-run campaign on the Ames
 regression competition (metric: RMSE on log-price, lower is better), tracked
 end-to-end with this framework. `runs.jsonl` keeps all 37 records and
-`experiments/` ships every run's notebook — winners *and* the 14 falsified
+`experiments/` ships every run's notebook — winners *and* the 15 falsified
 regressions — so the whole journey is reproducible, not just the clean climb.
 
 The table below lists only the **new-best milestones**. The real path was not
