@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Kaggle competition data + generated submissions (user-managed, not committed)
+examples/*/data/
+examples/*/artifacts/
+
+# OS
+.DS_Store

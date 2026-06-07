@@ -1,0 +1,8 @@
+slug: home-data-for-ml-course
+metric: rmse
+direction: minimize
+submission_type: csv
+submission_file: submission.csv
+sample_submission: null
+kernel_slug: null
+daily_limit: 10

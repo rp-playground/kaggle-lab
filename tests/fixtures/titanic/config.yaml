@@ -1,0 +1,7 @@
+slug: titanic
+metric: accuracy
+direction: maximize
+submission_type: csv
+submission_file: submission.csv
+kernel_slug: null
+daily_limit: 10

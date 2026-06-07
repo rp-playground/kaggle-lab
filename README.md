@@ -1,0 +1,104 @@
+# kaggle-lab
+
+A small, reproducible **experiment-tracking framework** for Kaggle competitions.
+Every submission is a notebook run with a mandatory changelog (a stated *change*
+and *hypothesis*, written before the score is known), executed via papermill,
+auto-submitted to Kaggle, polled for its score, and recorded as an **append-only**
+parent→child run in `runs.jsonl`. Records are never mutated: the format supports
+corrections as new rows carrying `supersedes`, and the current state is recovered
+by collapsing the log to the latest record per run.
+
+Installed as a CLI:
+
+```bash
+uv sync --extra dev
+uv run kaggle-lab --help
+```
+
+## Why this exists
+
+The point isn't a leaderboard score — it's the **discipline**: hypothesis-first
+changelogs (no post-hoc rationalization), git SHA captured per run, submission
+de-duplication via SHA1, recoverable polling, and an honest log that keeps the
+regressions, not just the wins.
+
+## Worked example — home-data (Ames House Prices)
+
+`examples/home-data-for-ml-course/` is a real, 37-run campaign on the Ames
+regression competition (metric: RMSE on log-price, lower is better), tracked
+end-to-end with this framework. The `runs.jsonl` keeps all 37 records (including
+the falsified regressions); `experiments/` keeps the notebooks for the
+score-improving milestones.
+
+| # | Change | Public RMSE | Best so far |
+|---|---|---|---|
+| 1 | Baseline pipeline — semantic NA encoding, RandomForest | 16704.57 | ✅ |
+| 2 | Replace RandomForest with GradientBoosting | 16218.88 | ✅ |
+| 3 | Add Neighborhood target encoding | 15635.61 | ✅ |
+| 4 | Remove mega-house outliers, add `TotalSF` | 15192.61 | ✅ |
+| 5 | Replace garage block with 3 PLS components | 14719.79 | ✅ |
+| 6 | Minimal preprocessing pipeline (median impute + ordinal) | 14495.67 | ✅ |
+| 7 | Swap to AmesNAImputer + Ames feature steps | 14436.20 | ✅ |
+| 8 | Re-add three FE steps on top of the Ames imputer | 14384.54 | ✅ |
+| 9 | Revert garage-PLS (counter-productive) | 14121.44 | ✅ |
+| 10 | Switch model to XGBoost (`hist`, native categorical) | 13982.72 | ✅ |
+| 11 | Add bath features | 13854.66 | ✅ |
+| 12 | Equal-weight blend: XGBoost + Lasso | 12879.91 | ✅ |
+| 13 | Extend blend with ElasticNet | 12745.96 | ✅ |
+| 14 | Add `quality_size` interaction step | 12688.29 | ✅ |
+| 15 | Ridge-weighted blend (replace equal-weight mean) | 12600.44 | ✅ |
+| 16 | Wrap XGBoost in `SeedBag(seeds=[42,1,7])` | 12562.82 | ✅ |
+| 17 | Add a fixed 20% holdout split | 12504.29 | ✅ |
+| 18 | Merge redundant Condition1/Condition2 | 12454.92 | ✅ |
+| 19 | log1p(LotArea) + log1p(LotFrontage) skew compression (best) | **12438.54** | ✅ |
+
+Baseline → best: **16704.57 → 12438.54** (~26% relative reduction), best
+leaderboard position **98**, over 37 documented submissions in 10 days.
+
+## `runs.jsonl` schema (one JSON object per line)
+
+| Field | Meaning |
+|---|---|
+| `run_id` | timestamped unique id |
+| `competition` | competition slug |
+| `notebook` | path to the executed notebook |
+| `submission_sha1` | SHA1 of the submission file (dedup key) |
+| `parent_run_id` | the run this one was derived from |
+| `changelog` | `{change, hypothesis}` written before scoring |
+| `git_sha`, `git_dirty` | code provenance |
+| `kaggle` | `{status, public_score, private_score, submission_ref, ...}` |
+| `parent_public_score`, `delta_vs_parent` | improvement vs parent |
+| `supersedes` | run_id this record corrects (append-only) |
+
+Inspect with `jq`, e.g. the score progression:
+
+```bash
+jq -r '[.run_id, (.kaggle.public_score|tostring), .changelog.change] | @tsv' \
+  examples/home-data-for-ml-course/runs.jsonl
+```
+
+## Repo layout
+
+```
+kaggle-lab/
+├── src/kaggle_lab/     framework: changelog, runner, submitter, poller, tracker, lab, cli
+├── src/eda/            reusable plotting helpers
+├── tests/              pytest suite + fixtures
+└── examples/
+    └── home-data-for-ml-course/
+        ├── config.yaml     competition metadata (metric: rmse, direction: minimize)
+        ├── runs.jsonl      all 37 tracked runs
+        ├── experiments/    the 18 milestone notebooks
+        └── utils/          Ames-specific transformers
+```
+
+## Kaggle data
+
+Competition CSVs are not committed. Download them into
+`examples/home-data-for-ml-course/data/` with the Kaggle CLI:
+
+```bash
+kaggle competitions download -c home-data-for-ml-course \
+  -p examples/home-data-for-ml-course/data && \
+  (cd examples/home-data-for-ml-course/data && unzip -o '*.zip')
+```
