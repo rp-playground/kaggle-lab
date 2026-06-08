@@ -29,7 +29,7 @@ is better). `runs.jsonl` keeps all 37 records and `experiments/` ships every run
 notebook — the winners and the 15 regressions — so the whole thing is reproducible.
 
 The table below lists only the **new-best milestones**. The real path wasn't
-monotonic, and some of my better-sounding ideas made the score worse: keeping only
+this easy, and some of my better-sounding ideas made the score worse: keeping only
 the top-20 mutual-information features cost +2369 LB, tightening the outlier rule to
 `TotalSF>4000` cost +431, and a cluster of late feature-engineering ideas cost +48
 to +123. They are all still in the log. I read the full graph with
