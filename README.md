@@ -17,18 +17,16 @@ uv run kaggle-lab --help
 ## Why this exists
 
 I don't care about the leaderboard score here; I care about the discipline around
-it. The changelog is written before the score is known, so a run is a claim that can
-be wrong instead of a story I tell afterwards. Each run pins its code by git SHA,
-dedupes submissions by SHA1 so I can't quietly re-submit the same CSV, recovers from
+it. The changelog is written before the score is known, so a run is a claim to be proved correct. 
+Each run pins its code by git SHA, dedupes submissions by SHA1 so I can't re-submit the same CSV, recovers from
 a polling timeout, and keeps the regressions in the log rather than only the wins.
 
 ## Worked example — home-data (Ames House Prices)
 
-I drove the framework through a real competition. `examples/home-data-for-ml-course/`
-is a 37-run campaign on the Ames regression problem (metric: RMSE on log-price, lower
+Take a look at `examples/home-data-for-ml-course/`. It
+is my 37-run work on the Ames regression problem (metric: RMSE on log-price, lower
 is better). `runs.jsonl` keeps all 37 records and `experiments/` ships every run's
-notebook — the winners and the 15 regressions — so the whole journey is reproducible,
-not just the clean climb.
+notebook — the winners and the 15 regressions — so the whole thing is reproducible.
 
 The table below lists only the **new-best milestones**. The real path wasn't
 monotonic, and some of my better-sounding ideas made the score worse: keeping only
